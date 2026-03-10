@@ -81,7 +81,7 @@ python misra_checker.py src/ --ext .cpp,.hpp
 | `--fail-on` | Fails when... |
 |-------------|---------------|
 | `never`     | Never (always 0) |
-| `advisory`  | Any finding exists |
+| `any`       | Any finding exists |
 | `required`  | Any Required or Mandatory finding (default) |
 | `mandatory` | Any Mandatory finding |
 
