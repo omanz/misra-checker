@@ -117,7 +117,7 @@ R_OCTAL    = _reg("6.5.1",  Category.REQUIRED,
     "The leading-zero octal prefix is easily confused with decimal.")
 
 R_HEXCASE  = _reg("6.5.2",  Category.ADVISORY,
-    "Hexadecimal digit letters shall be uppercase (A-F)",
+    "Hexadecimal digit letters shall be uppercase (A–F)",
     "Lowercase l/1 ambiguity; consistent style aids readability.")
 
 # --- Memory & Resources -------------------------------------------------------
@@ -141,6 +141,12 @@ R_VOLATILE = _reg("6.2.1",  Category.ADVISORY,
 R_USINGNS  = _reg("6.1.1",  Category.REQUIRED,
     "using namespace shall not appear at file/global scope in header files",
     "Pollutes the namespace of every including translation unit.")
+
+R_PROTECTED = _reg("10.3.1", Category.REQUIRED,
+    "Member data shall be private; protected data members are not permitted",
+    "protected data members expose class internals to derived classes, breaking encapsulation "
+    "and creating tight coupling in the inheritance hierarchy. Use private data with "
+    "protected accessors if derived-class access is needed.")
 
 # --- Preprocessor ------------------------------------------------------------
 R_DEFINE   = _reg("19.2.1", Category.REQUIRED,
@@ -487,6 +493,112 @@ def check_register(lines: List[str], fp: str) -> List[Finding]:
     return out
 
 
+def check_protected_members(lines: List[str], fp: str) -> List[Finding]:
+    """
+    Detect protected data members inside class/struct definitions.
+
+    Strategy (regex mode):
+      1. Track brace depth to know when we enter/exit a class body.
+      2. When a 'protected:' section is active, classify each non-empty,
+         non-comment line as either a *method declaration* or a *data member*.
+         - Lines containing '(' before ';' → likely a method → skip.
+         - Lines ending in ';' without '(' → likely a data member → flag.
+      3. Reset the protected section on 'private:' or 'public:' labels.
+      4. Nested class definitions (extra '{') are tracked via a depth stack.
+
+    The AST path (libclang) is more precise and handles edge cases like
+    in-class initialisers, templates, and anonymous structs.
+    """
+    out = []
+
+    # Patterns
+    class_open   = re.compile(r"\b(class|struct)\b[^;]*\{?\s*$")
+    access_label = re.compile(r"^\s*(public|protected|private)\s*:")
+    brace_open   = re.compile(r"\{")
+    brace_close  = re.compile(r"\}")
+    # A data-member line: ends with ';', does NOT contain '(' before the ';'
+    # Also skip lines that are purely '};' (end of class) or type aliases / using
+    data_member  = re.compile(
+        r"^\s*"
+        r"(?!using\b|typedef\b|friend\b|static_assert\b)"   # not these keywords
+        r"(?:(?:static|mutable|const|constexpr|inline|explicit|virtual|override|"
+        r"unsigned|signed|long|short)\s+)*"
+        r"[A-Za-z_:][A-Za-z0-9_<>:,\s*&]*"                  # type
+        r"\s+[A-Za-z_][A-Za-z0-9_]*"                         # name
+        r"(?:\s*\[[^\]]*\])?"                                 # optional []
+        r"\s*(?:=[^;]*)?\s*;"                                 # optional init + ;
+    )
+
+    in_class      = False
+    brace_depth   = 0   # depth inside the current class body (1 = top-level members)
+    in_protected  = False
+
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+
+        if _is_comment_line(line):
+            continue
+
+        code = _strip_line_comment(line)
+
+        # Detect class/struct opening (may or may not have { on same line)
+        if not in_class and class_open.search(code):
+            if "{" in code:
+                in_class    = True
+                brace_depth = 1
+            # else: wait for '{' on next line
+            continue
+
+        # Count braces to track class body depth
+        if not in_class:
+            if "{" in code:
+                in_class    = True
+                brace_depth = 1
+            continue
+
+        opens  = len(brace_open.findall(code))
+        closes = len(brace_close.findall(code))
+        brace_depth += opens - closes
+
+        if brace_depth <= 0:
+            # Exited the class body
+            in_class     = False
+            in_protected = False
+            brace_depth  = 0
+            continue
+
+        # Only inspect top-level members (depth == 1); skip nested classes/enums
+        if brace_depth != 1:
+            continue
+
+        # Access specifier labels
+        m = access_label.match(stripped)
+        if m:
+            in_protected = (m.group(1) == "protected")
+            continue
+
+        if not in_protected:
+            continue
+
+        # Inside protected: — decide if this line is a data member
+        if ";" not in code:
+            continue                      # multi-line declaration — skip (conservative)
+        if "(" in code.split(";")[0]:
+            continue                      # contains '(' before ';' → method / ctor / using
+
+        # Pure ';' lines (e.g. empty statement) or '}' lines
+        if stripped in (";", "};", "}"):
+            continue
+
+        if data_member.match(stripped):
+            out.append(_make(
+                R_PROTECTED, fp, i, snippet=line,
+                note="Move data member to 'private:'; expose via protected accessor if needed"
+            ))
+
+    return out
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 # AST-Based Checks (libclang)
 # ═════════════════════════════════════════════════════════════════════════════
@@ -527,6 +639,13 @@ def _ast_checks(fp: str, lines: List[str]) -> List[Finding]:
                         out.append(_make(R_VARARGS, fp, ln, snippet=snip,
                                          note="Variadic function definition"))
 
+                # Protected data members (precise AST check)
+                if node.kind == cx.CursorKind.FIELD_DECL:
+                    if node.access_specifier == cx.AccessSpecifier.PROTECTED:
+                        out.append(_make(R_PROTECTED, fp, ln,
+                                         col=node.location.column, snippet=snip,
+                                         note=f"Protected data member '{node.spelling}' — make private"))
+
             for child in node.get_children():
                 visit(child)
 
@@ -558,6 +677,7 @@ TEXT_CHECKERS: List[Callable] = [
     check_switch_fallthrough,
     check_volatile,
     check_register,
+    check_protected_members,
 ]
 
 CPP_EXTENSIONS = {".cpp", ".cxx", ".cc", ".c", ".h", ".hpp", ".hh", ".hxx"}

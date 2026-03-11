@@ -13,6 +13,13 @@ int global_counter = 0;
 class Sensor {
 public:
     virtual void read() {}
+    int getId() const { return id_; }    // OK — protected accessor is fine
+protected:
+    void helper() {}                     // OK — protected method is fine
+    int raw_value_;                      // VIOLATION 10.3.1 — protected data member
+    float calibration_;                  // VIOLATION 10.3.1 — protected data member
+private:
+    int id_ = 0;                         // OK — private data
 };
 
 class PressureSensor : public Sensor {
