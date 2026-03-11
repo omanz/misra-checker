@@ -138,6 +138,21 @@ In the repositories there are 3 `github` workflows:
    the `misra_check.py` to be present in the repository. Typically used in the
    present repository.
 
+
+The source code folders to analyse are specified in `misra.config.json`. Here an
+extract:
+```bash
+{
+  "sources": [
+    "blinky",
+    "semaphores",
+    "CarSystem"
+  ],
+  "fail_on": "required",
+  "exclude_rules": [],
+  "extensions": ".cpp,.cxx,.cc,.c,.h,.hpp,.hh,.hxx"
+}
+```
 ---
 
 ## Analysis Modes

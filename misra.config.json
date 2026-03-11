@@ -1,0 +1,10 @@
+{
+  "sources": [
+    "src",
+    "lib",
+    "drivers"
+  ],
+  "fail_on": "required",
+  "exclude_rules": [],
+  "extensions": ".cpp,.cxx,.cc,.c,.h,.hpp,.hh,.hxx"
+}

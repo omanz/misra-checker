@@ -1,5 +1,5 @@
-# .github/workflows/misra.yml
-name: name: MISRA C++ 2023 — Code Analysis
+# .github/workflows/misra-analysis.yml
+name: MISRA C++ 2023 — Code Analysis
 
 on:
   push:
@@ -23,25 +23,50 @@ jobs:
       - name: Install libclang (AST-based checks)
         run: pip install libclang
 
-      - name: Download MISRA checker
+      - name: Read config and build checker arguments
         run: |
-          curl -sSL https://raw.githubusercontent.com/EmbReal/misra-checker/main/misra_checker.py \
-            -o misra_checker.py
-          # Optional: verify checksum to ensure integrity
-          # echo "EXPECTED_SHA256  misra_checker.py" | sha256sum --check
+          python - << 'PYEOF'
+          import json, os
 
-      - name: Run MISRA checker (terminal summary)
+          with open("misra.config.json") as f:
+              cfg = json.load(f)
+
+          sources      = " ".join(cfg.get("sources", ["src"]))
+          fail_on      = cfg.get("fail_on", "required")
+          extensions   = cfg.get("extensions", ".cpp,.cxx,.cc,.c,.h,.hpp,.hh,.hxx")
+          exclude      = ",".join(cfg.get("exclude_rules", []))
+
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              env.write(f"MISRA_SOURCES={sources}\n")
+              env.write(f"MISRA_FAIL_ON={fail_on}\n")
+              env.write(f"MISRA_EXTENSIONS={extensions}\n")
+              env.write(f"MISRA_EXCLUDE={exclude}\n")
+          PYEOF
+
+      - name: Run MISRA checker
         run: |
-          python misra_checker.py src/ \
+          EXCLUDE_ARG=""
+          if [ -n "$MISRA_EXCLUDE" ]; then
+            EXCLUDE_ARG="--exclude-rules $MISRA_EXCLUDE"
+          fi
+          python misra_checker.py $MISRA_SOURCES \
+            --ext "$MISRA_EXTENSIONS" \
             --format json -o misra_findings.json \
-            --fail-on required
+            --fail-on "$MISRA_FAIL_ON" \
+            $EXCLUDE_ARG
 
       - name: Generate HTML report
         if: always()
         run: |
-          python misra_checker.py src/ \
+          EXCLUDE_ARG=""
+          if [ -n "$MISRA_EXCLUDE" ]; then
+            EXCLUDE_ARG="--exclude-rules $MISRA_EXCLUDE"
+          fi
+          python misra_checker.py $MISRA_SOURCES \
+            --ext "$MISRA_EXTENSIONS" \
             --format html -o misra_report.html \
-            --fail-on never
+            --fail-on never \
+            $EXCLUDE_ARG
 
       - name: Upload findings (JSON)
         if: always()
@@ -66,6 +91,7 @@ jobs:
           REQUIRED=$(python -c "import json; d=json.load(open('misra_findings.json')); print(sum(1 for f in d if f['category'] in ('Required','Mandatory')))")
           ADVISORY=$(python -c "import json; d=json.load(open('misra_findings.json')); print(sum(1 for f in d if f['category']=='Advisory'))")
           echo "### 🔍 MISRA C++ 2023 Results" >> $GITHUB_STEP_SUMMARY
+          echo "Scanned: \`$MISRA_SOURCES\`" >> $GITHUB_STEP_SUMMARY
           echo "| Category | Count |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| Required + Mandatory | $REQUIRED |" >> $GITHUB_STEP_SUMMARY
