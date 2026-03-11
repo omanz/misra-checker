@@ -250,8 +250,9 @@ def check_c_style_cast(lines: List[str], fp: str) -> List[Finding]:
     # Pattern: (type) followed by alphanumeric, *, &, or (
     pat = re.compile(
         r"\(\s*(?:const\s+|unsigned\s+|signed\s+|long\s+)*"
-        r"(?:int|long|short|char|float|double|bool|void\s*\*?"
-        r"|[A-Z_][A-Za-z0-9_:<>,\s]*\*?\s*)\s*\)"
+        r"(?:int|long|short|char|float|double|bool|void"
+        r"|[A-Z_][A-Za-z0-9_:<>,\s]*)"
+        r"(?:\s*\*+\s*)?\s*\)"
         r"\s*(?=[A-Za-z0-9_(\"\'&*])"
     )
     for i, line in enumerate(lines, 1):
@@ -326,7 +327,7 @@ def check_hex_case(lines: List[str], fp: str) -> List[Finding]:
 
 def check_define_constants(lines: List[str], fp: str) -> List[Finding]:
     out = []
-    pat = re.compile(r"^\s*#\s*define\s+([A-Za-z_][A-Za-z0-9_]*)(\s+(.*))?$")
+    pat = re.compile(r"^\s*#\s*define\s+([A-Za-z_][A-Za-z0-9_]*)(\(.*\)|\s+(.*))?$")
     guard_pat = re.compile(r"^[A-Z0-9_]+(?:_H(?:PP)?_?|_INCLUDED|_DEFINED)$")
     for i, line in enumerate(lines, 1):
         m = pat.match(line)
