@@ -173,6 +173,17 @@ class TestCStyleCast(unittest.TestCase):
                           "// avoid (int) casts")
         self.assertEqual(findings, [])
 
+    def test_clean_cast_in_preprocessor_if(self):
+        """#if defined(SYMBOL) must NOT be flagged as a C-style cast."""
+        findings = _check(mc.check_c_style_cast,
+                          "#if defined(CONFIG_SYS_HEAP_RUNTIME_STATS) && CONFIG_HEAP_MEM_POOL_SIZE > 0")
+        self.assertEqual(findings, [])
+
+    def test_clean_cast_in_preprocessor_ifdef(self):
+        findings = _check(mc.check_c_style_cast,
+                          "#ifdef defined(CONFIG_THREAD_STACK_INFO)")
+        self.assertEqual(findings, [])
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # 11.5.1  Dynamic memory
@@ -208,6 +219,18 @@ class TestDynamicMemory(unittest.TestCase):
         """std::make_unique does not call new directly — must not trigger."""
         findings = _check(mc.check_dynamic_memory,
                           "auto p = std::make_unique<int>(0);")
+        self.assertEqual(findings, [])
+
+    def test_clean_operator_new_definition(self):
+        """operator new override (e.g. redirecting to RTOS allocator) must not be flagged."""
+        findings = _check(mc.check_dynamic_memory,
+                          "void* operator new(size_t size) { return k_malloc(size); }")
+        self.assertEqual(findings, [])
+
+    def test_clean_operator_delete_definition(self):
+        """operator delete override must not be flagged."""
+        findings = _check(mc.check_dynamic_memory,
+                          "void operator delete(void* ptr) noexcept { k_free(ptr); }")
         self.assertEqual(findings, [])
 
 

@@ -184,6 +184,13 @@ def _is_comment_line(line: str) -> bool:
     return s.startswith("//") or s.startswith("*") or s.startswith("/*")
 
 
+def _is_preprocessor_line(line: str) -> bool:
+    """Return True for lines that are preprocessor directives (#if, #ifdef, #elif, etc.).
+    These must be skipped by checkers that analyse expressions, since constructs
+    like  #if defined(SYMBOL)  would otherwise be mistaken for C-style casts."""
+    return line.strip().startswith("#")
+
+
 def _strip_line_comment(line: str) -> str:
     """Remove trailing // comment (does not handle strings containing //)."""
     idx = line.find("//")
@@ -256,7 +263,7 @@ def check_c_style_cast(lines: List[str], fp: str) -> List[Finding]:
         r"\s*(?=[A-Za-z0-9_(\"\'&*])"
     )
     for i, line in enumerate(lines, 1):
-        if _is_comment_line(line):
+        if _is_comment_line(line) or _is_preprocessor_line(line):
             continue
         code = _strip_line_comment(line)
         m = pat.search(code)
@@ -269,10 +276,16 @@ def check_c_style_cast(lines: List[str], fp: str) -> List[Finding]:
 def check_dynamic_memory(lines: List[str], fp: str) -> List[Finding]:
     out = []
     pat = re.compile(r"\b(new|delete|malloc|free|calloc|realloc)\b")
+    # operator new/delete definitions are legitimate overrides (e.g. redirecting
+    # to an RTOS allocator) and must not be flagged as dynamic allocation calls.
+    operator_def = re.compile(r"\boperator\s+(new|delete)\b")
     for i, line in enumerate(lines, 1):
-        if _is_comment_line(line):
+        if _is_comment_line(line) or _is_preprocessor_line(line):
             continue
-        m = pat.search(_strip_line_comment(line))
+        code = _strip_line_comment(line)
+        if operator_def.search(code):
+            continue
+        m = pat.search(code)
         if m:
             out.append(_make(R_DYNMEM, fp, i, snippet=line,
                              note=f"Keyword/function: '{m.group(1)}'"))
