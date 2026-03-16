@@ -454,7 +454,7 @@ def check_braces(lines: List[str], fp: str) -> List[Finding]:
 
 def check_switch_fallthrough(lines: List[str], fp: str) -> List[Finding]:
     """
-    Basic heuristic: a 'case:' label without break/return/throw/[[fallthrough]]
+    Basic heuristic: a 'case:' label without break/return/throw/fallthrough
     before the next 'case:' or '}'.
     """
     out = []
@@ -472,10 +472,10 @@ def check_switch_fallthrough(lines: List[str], fp: str) -> List[Finding]:
             if last_case != -1:
                 # scan back from i-1 to last_case for a terminator
                 block = lines[last_case:i - 1]
-                if not any(term_pat.search(bl) for bl in block):
+                if not any(term_pat.search(_strip_line_comment(bl)) for bl in block):
                     out.append(_make(R_SWITCH, fp, last_case + 1,
                                      snippet=lines[last_case].strip(),
-                                     note="No break/return/throw/[[fallthrough]] before next case"))
+                                     note="No break/return/throw/fallthrough before next case"))
             last_case = i - 1
         if line.strip() == "}":
             in_switch = False
@@ -1059,3 +1059,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+    

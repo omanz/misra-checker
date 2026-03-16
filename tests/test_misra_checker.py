@@ -558,6 +558,19 @@ class TestSwitchFallthrough(unittest.TestCase):
         """)
         self.assertIn("9.4.2", _rules_hit(findings))
 
+    def test_violation_fallthrough_word_in_comment_not_suppressor(self):
+        """'fallthrough' appearing only in a comment must NOT be treated as a terminator."""
+        findings = _check(mc.check_switch_fallthrough, """
+            switch (x) {
+                case 1:
+                    do_a();  // no break/fallthrough here
+                case 2:
+                    do_b();
+                    break;
+            }
+        """)
+        self.assertIn("9.4.2", _rules_hit(findings))
+
     def test_clean_break_present(self):
         findings = _check(mc.check_switch_fallthrough, """
             switch (x) {
@@ -1067,3 +1080,4 @@ class TestRuleRegistry(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+    
