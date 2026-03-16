@@ -14,24 +14,23 @@ subset of **MISRA C++ 2023** rules using regex/text analysis and (optionally) li
 | Rule ID  | Category  | Description |
 |----------|-----------|-------------|
 | 6.1.1    | Required  | `using namespace` shall not appear at file scope in headers |
-| 6.2.1    | Advisory  | `volatile` shall not be used without documented justification |
 | 6.3.1    | Required  | The `register` storage-class specifier shall not be used |
 | 6.5.1    | Required  | Octal integer literals shall not be used |
 | 6.5.2    | Advisory  | Hexadecimal digit letters shall be uppercase (A-F) |
 | 7.0.2    | Required  | `NULL` shall not be used; use `nullptr` |
-| 7.2.1    | Required  | C-style casts shall not be used |
-| 8.1.1    | Required  | `goto` shall not be used |
-| 8.4.2    | Required  | Variable-argument functions shall not be defined or called |
-| 9.3.1    | Required  | Compound statements (braces) required for all control-flow bodies |
-| 9.4.1    | Required  | Every switch-clause shall be terminated by `break`/`return`/`throw`/`[[fallthrough]]` |
-| 10.3.1   | Required  | Member data shall be private; protected data members are not permitted |
-| 11.5.1   | Required  | Dynamic heap memory (`new`/`delete`/`malloc`/`free`) shall not be used |
-| 13.1.1   | Required  | C standard I/O functions shall not be used |
-| 13.2.1   | Required  | C raw-memory and string functions shall not be used |
-| 15.0.1   | Advisory  | Exceptions shall not escape from destructors or `main()` |
-| 15.3.1   | Required  | `std::exit`, `std::abort`, `std::_Exit` shall not be called |
-| 19.1.1   | Required  | Each header file shall have an include guard or `#pragma once` |
-| 19.2.1   | Required  | `#define` shall not be used for constants or function-like macros |
+| 8.2.2    | Required  | C-style casts and functional notation casts shall not be used |
+| 8.2.11   | Required  | An argument passed via ellipsis shall have an appropriate type |
+| 9.3.1    | Required  | The body of an iteration-statement or a selection-statement shall be a compound-statement |
+| 9.4.2    | Required  | The structure of a switch statement shall be appropriate |
+| 10.1.2   | Required  | The `volatile` qualifier shall be used appropriately |
+| 14.1.1   | Advisory  | Non-static data members should be either all private or all public |
+| 18.5.1   | Advisory  | A noexcept function should not attempt to propagate an exception to the calling function |
+| 18.5.2   | Advisory  | Program-terminating functions should not be used |
+| 19.0.2   | Required  | Function-like macros shall not be defined |
+| 19.2.1   | Required  | Precautions shall be taken to prevent a header file being included more than once |
+| 21.2.2   | Required  | The string handling functions from `<cstring>`, `<cstdlib>`, `<cwchar>` and `<cinttypes>` shall not be used |
+| 21.6.1   | Advisory  | Dynamic memory should not be used |
+| 30.0.1   | Required  | The C Library input/output functions shall not be used |
 
 ---
 

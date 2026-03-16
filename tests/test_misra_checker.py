@@ -97,12 +97,12 @@ class TestGoto(unittest.TestCase):
                 return 0;
             }
         """)
-        self.assertIn("8.1.1", _rules_hit(findings))
+        self.assertIn("9.6.1", _rules_hit(findings))
 
     def test_violation_goto_indented(self):
         """goto with arbitrary indentation must be flagged."""
         findings = _check(mc.check_goto, "        goto cleanup;")
-        self.assertIn("8.1.1", _rules_hit(findings))
+        self.assertIn("9.6.1", _rules_hit(findings))
 
     def test_clean_goto_in_comment(self):
         """goto mentioned only in a comment must NOT be flagged."""
@@ -157,11 +157,11 @@ class TestCStyleCast(unittest.TestCase):
 
     def test_violation_cast_to_int(self):
         findings = _check(mc.check_c_style_cast, "int x = (int)some_float;")
-        self.assertIn("7.2.1", _rules_hit(findings))
+        self.assertIn("8.2.2", _rules_hit(findings))
 
     def test_violation_cast_to_char_ptr(self):
         findings = _check(mc.check_c_style_cast, "char* p = (char*)malloc(64);")
-        self.assertIn("7.2.1", _rules_hit(findings))
+        self.assertIn("8.2.2", _rules_hit(findings))
 
     def test_clean_static_cast(self):
         findings = _check(mc.check_c_style_cast,
@@ -193,23 +193,23 @@ class TestDynamicMemory(unittest.TestCase):
 
     def test_violation_new(self):
         findings = _check(mc.check_dynamic_memory, "int* p = new int(0);")
-        self.assertIn("11.5.1", _rules_hit(findings))
+        self.assertIn("21.6.1", _rules_hit(findings))
 
     def test_violation_delete(self):
         findings = _check(mc.check_dynamic_memory, "delete p;")
-        self.assertIn("11.5.1", _rules_hit(findings))
+        self.assertIn("21.6.1", _rules_hit(findings))
 
     def test_violation_malloc(self):
         findings = _check(mc.check_dynamic_memory, "void* p = malloc(64);")
-        self.assertIn("11.5.1", _rules_hit(findings))
+        self.assertIn("21.6.1", _rules_hit(findings))
 
     def test_violation_free(self):
         findings = _check(mc.check_dynamic_memory, "free(ptr);")
-        self.assertIn("11.5.1", _rules_hit(findings))
+        self.assertIn("21.6.1", _rules_hit(findings))
 
     def test_violation_calloc(self):
         findings = _check(mc.check_dynamic_memory, "int* p = (int*)calloc(10, sizeof(int));")
-        self.assertIn("11.5.1", _rules_hit(findings))
+        self.assertIn("21.6.1", _rules_hit(findings))
 
     def test_clean_stack_allocation(self):
         findings = _check(mc.check_dynamic_memory, "int arr[10] = {};")
@@ -242,11 +242,11 @@ class TestVarargs(unittest.TestCase):
 
     def test_violation_ellipsis_declaration(self):
         findings = _check(mc.check_varargs, "void log(const char* fmt, ...);")
-        self.assertIn("8.4.2", _rules_hit(findings))
+        self.assertIn("8.2.11", _rules_hit(findings))
 
     def test_violation_ellipsis_definition(self):
         findings = _check(mc.check_varargs, "void f(int x, ...) {}")
-        self.assertIn("8.4.2", _rules_hit(findings))
+        self.assertIn("8.2.11", _rules_hit(findings))
 
     def test_clean_no_ellipsis(self):
         findings = _check(mc.check_varargs, "void f(int x, int y) {}")
@@ -327,11 +327,11 @@ class TestDefineConstants(unittest.TestCase):
 
     def test_violation_define_constant(self):
         findings = _check(mc.check_define_constants, "#define MAX_SIZE 100")
-        self.assertIn("19.2.1", _rules_hit(findings))
+        self.assertIn("19.0.2", _rules_hit(findings))
 
     def test_violation_define_function_macro(self):
         findings = _check(mc.check_define_constants, "#define SQUARE(x) ((x)*(x))")
-        self.assertIn("19.2.1", _rules_hit(findings))
+        self.assertIn("19.0.2", _rules_hit(findings))
 
     def test_clean_include_guard(self):
         """Include guard defines (NAME_H / NAME_HPP) must not be flagged."""
@@ -357,7 +357,7 @@ class TestIncludeGuard(unittest.TestCase):
             #include <string>
             class Foo {};
         """)
-        self.assertIn("19.1.1", _rules_hit(findings))
+        self.assertIn("19.2.1", _rules_hit(findings))
 
     def test_clean_pragma_once(self):
         findings = self._check_header("#pragma once\nclass Foo {};")
@@ -388,19 +388,19 @@ class TestCStdio(unittest.TestCase):
 
     def test_violation_printf(self):
         findings = _check(mc.check_stdio, 'printf("hello\\n");')
-        self.assertIn("13.1.1", _rules_hit(findings))
+        self.assertIn("30.0.1", _rules_hit(findings))
 
     def test_violation_scanf(self):
         findings = _check(mc.check_stdio, "scanf(\"%d\", &x);")
-        self.assertIn("13.1.1", _rules_hit(findings))
+        self.assertIn("30.0.1", _rules_hit(findings))
 
     def test_violation_stdio_include(self):
         findings = _check(mc.check_stdio, "#include <stdio.h>")
-        self.assertIn("13.1.1", _rules_hit(findings))
+        self.assertIn("30.0.1", _rules_hit(findings))
 
     def test_violation_cstdio_include(self):
         findings = _check(mc.check_stdio, "#include <cstdio>")
-        self.assertIn("13.1.1", _rules_hit(findings))
+        self.assertIn("30.0.1", _rules_hit(findings))
 
     def test_clean_cout(self):
         findings = _check(mc.check_stdio, 'std::cout << "hello" << std::endl;')
@@ -420,19 +420,19 @@ class TestMemFunctions(unittest.TestCase):
     def test_violation_memcpy(self):
         findings = _check(mc.check_mem_functions,
                           "memcpy(dst, src, sizeof(buf));")
-        self.assertIn("13.2.1", _rules_hit(findings))
+        self.assertIn("21.2.2", _rules_hit(findings))
 
     def test_violation_memset(self):
         findings = _check(mc.check_mem_functions, "memset(buf, 0, size);")
-        self.assertIn("13.2.1", _rules_hit(findings))
+        self.assertIn("21.2.2", _rules_hit(findings))
 
     def test_violation_strcpy(self):
         findings = _check(mc.check_mem_functions, "strcpy(dst, src);")
-        self.assertIn("13.2.1", _rules_hit(findings))
+        self.assertIn("21.2.2", _rules_hit(findings))
 
     def test_violation_strlen(self):
         findings = _check(mc.check_mem_functions, "size_t n = strlen(s);")
-        self.assertIn("13.2.1", _rules_hit(findings))
+        self.assertIn("21.2.2", _rules_hit(findings))
 
     def test_clean_std_copy(self):
         findings = _check(mc.check_mem_functions,
@@ -453,15 +453,15 @@ class TestExitAbort(unittest.TestCase):
 
     def test_violation_exit(self):
         findings = _check(mc.check_exit_abort, "exit(1);")
-        self.assertIn("15.3.1", _rules_hit(findings))
+        self.assertIn("18.5.2", _rules_hit(findings))
 
     def test_violation_std_exit(self):
         findings = _check(mc.check_exit_abort, "std::exit(EXIT_FAILURE);")
-        self.assertIn("15.3.1", _rules_hit(findings))
+        self.assertIn("18.5.2", _rules_hit(findings))
 
     def test_violation_abort(self):
         findings = _check(mc.check_exit_abort, "abort();")
-        self.assertIn("15.3.1", _rules_hit(findings))
+        self.assertIn("18.5.2", _rules_hit(findings))
 
     def test_clean_return(self):
         findings = _check(mc.check_exit_abort, "return EXIT_SUCCESS;")
@@ -556,7 +556,7 @@ class TestSwitchFallthrough(unittest.TestCase):
                     break;
             }
         """)
-        self.assertIn("9.4.1", _rules_hit(findings))
+        self.assertIn("9.4.2", _rules_hit(findings))
 
     def test_clean_break_present(self):
         findings = _check(mc.check_switch_fallthrough, """
@@ -593,7 +593,7 @@ class TestVolatile(unittest.TestCase):
 
     def test_violation_volatile_var(self):
         findings = _check(mc.check_volatile, "volatile int sensor_reg;")
-        self.assertIn("6.2.1", _rules_hit(findings))
+        self.assertIn("10.1.2", _rules_hit(findings))
 
     def test_clean_volatile_in_comment(self):
         findings = _check(mc.check_volatile,
@@ -633,7 +633,7 @@ class TestProtectedMembers(unittest.TestCase):
                 int raw_value_;
             };
         """)
-        self.assertIn("10.3.1", _rules_hit(findings))
+        self.assertIn("14.1.1", _rules_hit(findings))
 
     def test_violation_multiple_protected_members(self):
         findings = _check(mc.check_protected_members, """
@@ -643,7 +643,7 @@ class TestProtectedMembers(unittest.TestCase):
                 float y_;
             };
         """)
-        self.assertEqual(_rules_hit(findings).count("10.3.1"), 2)
+        self.assertEqual(_rules_hit(findings).count("14.1.1"), 2)
 
     def test_violation_struct_protected_data(self):
         findings = _check(mc.check_protected_members, """
@@ -652,7 +652,7 @@ class TestProtectedMembers(unittest.TestCase):
                 uint8_t type_;
             };
         """)
-        self.assertIn("10.3.1", _rules_hit(findings))
+        self.assertIn("14.1.1", _rules_hit(findings))
 
     def test_clean_protected_method(self):
         """Protected methods (accessors, helpers) must NOT be flagged."""
@@ -711,26 +711,26 @@ class TestSuppression(unittest.TestCase):
     def test_suppression_silences_finding(self):
         """A MISRA-suppress comment on the same line must remove the finding."""
         tmp = _write_tmp(
-            "int* p = new int(0);  // MISRA-suppress: 11.5.1  legacy API\n"
+            "int* p = new int(0);  // MISRA-suppress: 21.6.1  legacy API\n"
         )
         try:
             findings = mc.check_file(str(tmp))
             rules = _rules_hit(findings)
-            self.assertNotIn("11.5.1", rules)
+            self.assertNotIn("21.6.1", rules)
         finally:
             tmp.unlink()
 
     def test_suppression_only_suppresses_named_rule(self):
         """Suppression of one rule must not silence other rules on the same line."""
         tmp = _write_tmp(
-            "char* p = (char*)malloc(64);  // MISRA-suppress: 7.2.1  reviewed\n"
+            "char* p = (char*)malloc(64);  // MISRA-suppress: 8.2.2  reviewed\n"
         )
         try:
             findings = mc.check_file(str(tmp))
             rules = _rules_hit(findings)
             # Cast is suppressed, but malloc (11.5.1) must still be reported
-            self.assertNotIn("7.2.1", rules)
-            self.assertIn("11.5.1", rules)
+            self.assertNotIn("8.2.2", rules)
+            self.assertIn("21.6.1", rules)
         finally:
             tmp.unlink()
 
@@ -739,7 +739,7 @@ class TestSuppression(unittest.TestCase):
         tmp = _write_tmp("int* p = new int(0);\n")
         try:
             findings = mc.check_file(str(tmp))
-            self.assertIn("11.5.1", _rules_hit(findings))
+            self.assertIn("21.6.1", _rules_hit(findings))
         finally:
             tmp.unlink()
 
@@ -790,7 +790,7 @@ class TestCheckFile(unittest.TestCase):
         tmp = _write_tmp("goto end;\n")
         try:
             findings = mc.check_file(str(tmp))
-            goto_findings = [f for f in findings if f.rule_id == "8.1.1"]
+            goto_findings = [f for f in findings if f.rule_id == "9.6.1"]
             self.assertEqual(len(goto_findings), 1)
         finally:
             tmp.unlink()
@@ -804,7 +804,7 @@ class TestFindingModel(unittest.TestCase):
 
     def _make_finding(self):
         return mc.Finding(
-            rule_id="8.1.1",
+            rule_id="9.6.1",
             category=mc.Category.REQUIRED,
             title="The goto statement shall not be used",
             filepath="foo.cpp",
@@ -822,7 +822,7 @@ class TestFindingModel(unittest.TestCase):
 
     def test_to_dict_values(self):
         d = self._make_finding().to_dict()
-        self.assertEqual(d["rule_id"], "8.1.1")
+        self.assertEqual(d["rule_id"], "9.6.1")
         self.assertEqual(d["category"], "Required")
         self.assertEqual(d["line"], 42)
 
@@ -840,7 +840,7 @@ class TestReporters(unittest.TestCase):
 
     def _sample_findings(self):
         return [
-            mc.Finding("8.1.1", mc.Category.REQUIRED,
+            mc.Finding("9.6.1", mc.Category.REQUIRED,
                        "goto shall not be used", "a.cpp", 10,
                        snippet="goto end;", note=""),
             mc.Finding("6.5.2", mc.Category.ADVISORY,
@@ -859,7 +859,7 @@ class TestReporters(unittest.TestCase):
 
     def test_html_report_contains_rule_ids(self):
         html = mc.report_html(self._sample_findings())
-        self.assertIn("8.1.1", html)
+        self.assertIn("9.6.1", html)
         self.assertIn("6.5.2", html)
 
     def test_html_report_is_valid_html(self):
@@ -896,7 +896,7 @@ class TestCLI(unittest.TestCase):
             tmp.unlink()
 
     def test_exit_code_1_on_violation(self):
-        tmp = self._write("goto end;\n")
+        tmp = self._write("int x = (int)y;\n")  # 8.2.2 is Required
         try:
             r = _run_checker(str(tmp), "--fail-on", "required")
             self.assertEqual(r.returncode, 1)
@@ -914,7 +914,7 @@ class TestCLI(unittest.TestCase):
 
     def test_fail_on_mandatory_ignores_required(self):
         """--fail-on mandatory must return 0 when only Required violations exist."""
-        tmp = self._write("goto end;\n")  # 8.1.1 is Required, not Mandatory
+        tmp = self._write("int x = (int)y;\n")  # 8.2.2 is Required, not Mandatory
         try:
             r = _run_checker(str(tmp), "--fail-on", "mandatory")
             self.assertEqual(r.returncode, 0)
@@ -964,10 +964,10 @@ class TestCLI(unittest.TestCase):
         out_file = tmp.with_suffix(".json")
         try:
             _run_checker(str(tmp), "--format", "json", "-o", str(out_file),
-                         "--rules", "8.1.1", "--fail-on", "never")
+                         "--rules", "9.6.1", "--fail-on", "never")
             data = json.loads(out_file.read_text())
             rule_ids = {f["rule_id"] for f in data}
-            self.assertEqual(rule_ids, {"8.1.1"})
+            self.assertEqual(rule_ids, {"9.6.1"})
         finally:
             tmp.unlink()
             if out_file.exists():
@@ -979,10 +979,10 @@ class TestCLI(unittest.TestCase):
         out_file = tmp.with_suffix(".json")
         try:
             _run_checker(str(tmp), "--format", "json", "-o", str(out_file),
-                         "--exclude-rules", "8.1.1", "--fail-on", "never")
+                         "--exclude-rules", "9.6.1", "--fail-on", "never")
             data = json.loads(out_file.read_text())
             rule_ids = [f["rule_id"] for f in data]
-            self.assertNotIn("8.1.1", rule_ids)
+            self.assertNotIn("9.6.1", rule_ids)
         finally:
             tmp.unlink()
             if out_file.exists():
@@ -991,7 +991,7 @@ class TestCLI(unittest.TestCase):
     def test_list_rules_exits_zero(self):
         r = _run_checker("--list-rules")
         self.assertEqual(r.returncode, 0)
-        self.assertIn("8.1.1", r.stdout)
+        self.assertIn("9.6.1", r.stdout)
 
     def test_no_args_exits_nonzero(self):
         r = _run_checker()
@@ -1017,15 +1017,15 @@ class TestCLI(unittest.TestCase):
 class TestRuleRegistry(unittest.TestCase):
 
     EXPECTED_RULES = {
-        "6.1.1", "6.2.1", "6.3.1", "6.5.1", "6.5.2",
-        "7.0.2", "7.2.1",
-        "8.1.1", "8.4.2",
-        "9.3.1", "9.4.1",
-        "10.3.1",
-        "11.5.1",
-        "13.1.1", "13.2.1",
-        "15.0.1", "15.3.1",
-        "19.1.1", "19.2.1",
+        "6.1.1", "10.1.2", "6.3.1", "6.5.1", "6.5.2",
+        "7.0.2", "8.2.2",
+        "9.6.1", "8.2.11",
+        "9.3.1", "9.4.2",
+        "14.1.1",
+        "21.6.1",
+        "30.0.1", "21.2.2",
+        "18.5.1", "18.5.2",
+        "19.0.2", "19.2.1",
     }
 
     def test_all_expected_rules_registered(self):

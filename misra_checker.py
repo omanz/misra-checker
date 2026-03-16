@@ -91,16 +91,16 @@ def _reg(rule_id: str, cat: Category, title: str, rationale: str) -> RuleDef:
     return r
 
 # --- Statements / Control Flow -----------------------------------------------
-R_GOTO     = _reg("8.1.1",  Category.REQUIRED,
-    "The goto statement shall not be used",
+R_GOTO     = _reg("9.6.1",  Category.ADVISORY,
+    "The goto statement should not be used",
     "goto makes control flow impossible to statically analyse. Use structured loops/returns.")
 
 R_BRACES   = _reg("9.3.1",  Category.REQUIRED,
-    "Compound statements (braces) shall be used for all control-flow bodies",
+    "The body of an iteration-statement or a selection-statement shall be a compound-statement",
     "Omitting braces causes subtle bugs. Every if/else/for/while body must be wrapped in {}.")
 
-R_SWITCH   = _reg("9.4.1",  Category.REQUIRED,
-    "Every switch-clause shall be terminated by break, return, throw, or [[fallthrough]]",
+R_SWITCH   = _reg("9.4.2",  Category.REQUIRED,
+    "The structure of a switch statement shall be appropriate",
     "Implicit fall-through is a common defect source.")
 
 # --- Expressions / Casts -----------------------------------------------------
@@ -108,9 +108,9 @@ R_NULL     = _reg("7.0.2",  Category.REQUIRED,
     "NULL shall not be used as a null-pointer constant; use nullptr",
     "NULL is an integer macro and is not type-safe. nullptr is the C++11 replacement.")
 
-R_CCAST    = _reg("7.2.1",  Category.REQUIRED,
-    "C-style casts shall not be used",
-    "C-style casts bypass C++ type system. Use static_cast/reinterpret_cast/const_cast.")
+R_CCAST    = _reg("8.2.2",  Category.REQUIRED,
+    "C-style casts and functional notation casts shall not be used",
+    "C-style casts bypass the C++ type system. Use static_cast/reinterpret_cast/const_cast.")
 
 R_OCTAL    = _reg("6.5.1",  Category.REQUIRED,
     "Octal integer literals shall not be used",
@@ -121,12 +121,12 @@ R_HEXCASE  = _reg("6.5.2",  Category.ADVISORY,
     "Lowercase l/1 ambiguity; consistent style aids readability.")
 
 # --- Memory & Resources -------------------------------------------------------
-R_DYNMEM   = _reg("11.5.1", Category.REQUIRED,
-    "Dynamic heap memory allocation shall not be used (new/delete/malloc/free)",
+R_DYNMEM   = _reg("21.6.1", Category.ADVISORY,
+    "Dynamic memory should not be used",
     "Dynamic allocation introduces non-determinism and fragmentation in safety-critical systems.")
 
-R_VARARGS  = _reg("8.4.2",  Category.REQUIRED,
-    "Variable-argument functions (ellipsis) shall not be defined or called",
+R_VARARGS  = _reg("8.2.11", Category.REQUIRED,
+    "An argument passed via ellipsis shall have an appropriate type",
     "Ellipsis parameters bypass type checking entirely.")
 
 # --- Declarations & Definitions -----------------------------------------------
@@ -134,44 +134,44 @@ R_REGISTER = _reg("6.3.1",  Category.REQUIRED,
     "The register storage-class specifier shall not be used",
     "register is deprecated in C++17 and removed in C++20.")
 
-R_VOLATILE = _reg("6.2.1",  Category.ADVISORY,
-    "volatile shall not be used without documented justification",
-    "volatile is often misused as a concurrency primitive. Add a comment explaining intent.")
+R_VOLATILE = _reg("10.1.2", Category.REQUIRED,
+    "The volatile qualifier shall be used appropriately",
+    "volatile is often misused as a concurrency primitive. Ensure its use is justified and documented.")
 
 R_USINGNS  = _reg("6.1.1",  Category.REQUIRED,
     "using namespace shall not appear at file/global scope in header files",
     "Pollutes the namespace of every including translation unit.")
 
-R_PROTECTED = _reg("10.3.1", Category.REQUIRED,
-    "Member data shall be private; protected data members are not permitted",
+R_PROTECTED = _reg("14.1.1", Category.ADVISORY,
+    "Non-static data members should be either all private or all public",
     "protected data members expose class internals to derived classes, breaking encapsulation "
     "and creating tight coupling in the inheritance hierarchy. Use private data with "
     "protected accessors if derived-class access is needed.")
 
 # --- Preprocessor ------------------------------------------------------------
-R_DEFINE   = _reg("19.2.1", Category.REQUIRED,
-    "#define shall not be used for constants or function-like macros",
+R_DEFINE   = _reg("19.0.2", Category.REQUIRED,
+    "Function-like macros shall not be defined",
     "Use constexpr for constants, inline functions or templates instead of macros.")
 
-R_GUARD    = _reg("19.1.1", Category.REQUIRED,
-    "Each header file shall have an include guard or #pragma once",
+R_GUARD    = _reg("19.2.1", Category.REQUIRED,
+    "Precautions shall be taken to prevent a header file being included more than once",
     "Prevents multiple-inclusion and redefinition errors.")
 
 # --- Library -----------------------------------------------------------------
-R_STDIO    = _reg("13.1.1", Category.REQUIRED,
-    "C standard I/O functions shall not be used",
+R_STDIO    = _reg("30.0.1", Category.REQUIRED,
+    "The C Library input/output functions shall not be used",
     "printf/scanf are not type-safe. Use C++ streams (<iostream>, <sstream>).")
 
-R_MEMFUNC  = _reg("13.2.1", Category.REQUIRED,
-    "C raw-memory and string functions shall not be used",
+R_MEMFUNC  = _reg("21.2.2", Category.REQUIRED,
+    "The string handling functions from <cstring>, <cstdlib>, <cwchar> and <cinttypes> shall not be used",
     "memcpy/strcpy etc. operate on raw bytes and bypass object semantics. Use std:: equivalents.")
 
-R_EXIT     = _reg("15.3.1", Category.REQUIRED,
-    "std::exit, std::abort, std::_Exit shall not be called",
+R_EXIT     = _reg("18.5.2", Category.ADVISORY,
+    "Program-terminating functions should not be used",
     "Abrupt termination bypasses destructors and RAII, leaving resources leaked.")
 
-R_EXCEPT   = _reg("15.0.1", Category.ADVISORY,
-    "Exceptions shall not escape from destructors or main()",
+R_EXCEPT   = _reg("18.5.1", Category.ADVISORY,
+    "A noexcept function should not attempt to propagate an exception to the calling function",
     "Exception-unsafe destructors lead to terminate() calls.")
 
 
