@@ -8,5 +8,8 @@ version = "0.1.0"
 requires-python = ">=3.8"
 dependencies = []
 
+[project.scripts]
+misra_checker = "misra_checker:main"
+
 [tool.setuptools]
 py-modules = ["misra_checker"]
