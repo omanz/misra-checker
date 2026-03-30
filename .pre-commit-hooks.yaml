@@ -1,5 +1,5 @@
 - id: misra-check
   name: MISRA C++ 2023 Checker
   entry: python {hook_dir}/misra_checker.py
-  language: system
+  language: python
   files: \.(c|cpp|cc|cxx|h|hpp|hh|hxx)$
